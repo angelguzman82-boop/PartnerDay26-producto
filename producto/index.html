@@ -145,7 +145,7 @@ console.log('Session ID:', SESSION_ID);
 
 // === GUARDADO EN JSONBIN — UN ÚNICO BIN, ARRAY DE RESPUESTAS ===
 const JSONBIN_KEY = "$2a$10$gDNYYz8B/06jaed6X88e5.fGroWZ1XImlZSeqrewTNpWMNftLZl86";
-const JSONBIN_BIN = "6a2be841da38895dfeb43755"; // bin único Partner Day 2026
+const JSONBIN_BIN = "6a2bec2cf5f4af5e29e5d30b"; // bin único Partner Day 2026
 
 async function saveResponse(data) {
   try {
@@ -158,10 +158,17 @@ async function saveResponse(data) {
 
     // 1. Leer el bin actual
     const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_KEY }
+      headers: {
+        "X-Master-Key": JSONBIN_KEY,
+        "X-Bin-Meta": "false"
+      }
     });
     const current = await getRes.json();
-    const existing = Array.isArray(current.record) ? current.record : [];
+    // Aceptar tanto array directo como objeto con campo responses o record
+    let existing = [];
+    if(Array.isArray(current.record)) existing = current.record;
+    else if(Array.isArray(current.record?.responses)) existing = current.record.responses;
+    else if(Array.isArray(current)) existing = current;
 
     // 2. Añadir nueva respuesta
     existing.push(entry);
@@ -171,7 +178,8 @@ async function saveResponse(data) {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "X-Master-Key": JSONBIN_KEY
+        "X-Master-Key": JSONBIN_KEY,
+        "X-Bin-Meta": "false"
       },
       body: JSON.stringify(existing)
     });
